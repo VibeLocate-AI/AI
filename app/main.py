@@ -1,0 +1,17 @@
+from fastapi import FastAPI
+
+from app.routers import reviews, search
+
+app = FastAPI(
+    title="VibeLocate AI — Inference Service",
+    description="AI & NLP Processing Service (Chapter 4.1.1, tier 4 of the architecture).",
+    version="0.1.0",
+)
+
+app.include_router(search.router)
+app.include_router(reviews.router)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

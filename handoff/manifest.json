@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-09-05T22:12:12.675111+00:00",
+  "source_file": "data\\dubai_pois.json",
+  "source_dataset": "OpenStreetMap (via Overpass API)",
+  "license": "ODbL — attribution required for public use",
+  "total_pois": 6128,
+  "counts_by_category": {
+    "amenities": 5668,
+    "quietness_negative": 123,
+    "safety": 324,
+    "quietness_positive": 13
+  },
+  "validation_warnings_count": 0,
+  "schema": {
+    "osm_id": "integer — unique key, use to prevent duplicate imports",
+    "name": "string",
+    "category": "one of: safety, quietness_positive, quietness_negative, amenities",
+    "latitude": "float (WGS84)",
+    "longitude": "float (WGS84)"
+  }
+}

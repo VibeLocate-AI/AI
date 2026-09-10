@@ -1,0 +1,65 @@
+[
+  {
+    "restaurant_name": "Zou Zou Turkish & Lebanese Restaurant",
+    "food_type": "Lebanese, MediterraneanMenu",
+    "text": "The hummus and grilled meats were delicious. Very clean environment and the staff were professional.",
+    "language": "en",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Zou Zou Turkish & Lebanese Restaurant",
+    "food_type": "Lebanese, MediterraneanMenu",
+    "text": "الأكل لذيذ جداً والمكان مريح، لكن الموسيقى كانت صاخبة قليلاً بالنسبة لعشاء عائلي.",
+    "language": "ar",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Zou Zou Turkish & Lebanese Restaurant",
+    "food_type": "Lebanese, MediterraneanMenu",
+    "text": "Great location near the mall, but the service was quite slow tonight. The food was okay, but not worth the wait.",
+    "language": "en",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Rhodes W1",
+    "food_type": "European, British$$$$Menu",
+    "text": "The food quality was exceptional and the atmosphere is very sophisticated. Perfect for a quiet business dinner in the city.",
+    "language": "en",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Rhodes W1",
+    "food_type": "European, British$$$$Menu",
+    "text": "الأكل لذيذ جداً والمكان نظيف ومرتب، لكن الأسعار مرتفعة قليلاً مقارنة بالكمية.",
+    "language": "ar",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Rhodes W1",
+    "food_type": "European, British$$$$Menu",
+    "text": "The flavors were okay, but it was far too noisy for a high-end restaurant. Also, finding parking nearby was a struggle.",
+    "language": "en",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Giardino",
+    "food_type": "Asian, Mediterranean$$$$",
+    "text": "The fusion of Asian and Mediterranean flavors is impressive. Very clean environment and the staff were professional.",
+    "language": "en",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Giardino",
+    "food_type": "Asian, Mediterranean$$$$",
+    "text": "الأكل لذيذ جداً والمكان راقي، لكن الموسيقى كانت صاخبة بعض الشيء مما جعل الجلسة غير هادئة.",
+    "language": "ar",
+    "source": "synthetic_deepseek_v1"
+  },
+  {
+    "restaurant_name": "Giardino",
+    "food_type": "Asian, Mediterranean$$$$",
+    "text": "Overpriced for the portion sizes. It's in a convenient location near the mall, but the service was quite slow tonight.",
+    "language": "en",
+    "source": "synthetic_deepseek_v1"
+  }
+]
