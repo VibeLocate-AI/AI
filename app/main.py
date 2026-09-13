@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import reviews, search
+from app.routers import property_search, reviews, search
 
 app = FastAPI(
     title="VibeLocate AI — Inference Service",
@@ -10,6 +10,7 @@ app = FastAPI(
 
 app.include_router(search.router)
 app.include_router(reviews.router)
+app.include_router(property_search.router)
 
 
 @app.get("/health")

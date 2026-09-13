@@ -1,22 +1,35 @@
 """
 Pydantic schemas.
 
-UPDATED after inspecting the live backend API
-(https://vibelocate-laravel.onrender.com/api/home) directly. Key findings
-that changed this file vs. the original draft:
+UPDATED AGAIN after inspecting the ACTUAL database dump (vibelocate_db.sql)
+directly — this supersedes the earlier version that was based on guessing
+from the live /api/home response alone. The SQL dump is authoritative:
+it's the real `CREATE TABLE` + `INSERT` statements from the backend team's
+own database.
 
-1. Properties use a numeric `type_id`, NOT a free-text property_type string.
-   Inferred mapping (from titles in the API response — NOT yet confirmed
-   directly with the backend team, flag this as an assumption):
-       1 = Apartment, 2 = Villa, 3 = Penthouse, 4 = Townhouse
+Key corrections made in this version:
 
-2. Amenities/features come from a fixed, specific vocabulary
-   (e.g. "Swimming Pool", "Gym", "24/7 Security", "Balcony"...), not
-   arbitrary free-form tags like "fast_wifi".
+1. property_types has only 3 rows in the dump: Apartment(1), Villa(2),
+   Penthouse(3). There is NO "Townhouse" — that was a wrong guess in the
+   previous version based on assuming a common 4th type.
 
-3. Currency is AED, not USD. We no longer assume USD — we now extract
-   whichever currency the user actually said, and let the backend handle
-   any conversion/filtering.
+2. property_features are specific branded names with a `category` enum
+   (amenity | facility | view | security | policy), NOT generic tags.
+   Examples from the actual data: "Infinity Pool", "Full Sea View",
+   "Smart Home", "Covered Parking". The earlier "Swimming Pool", "Gym",
+   "Balcony" list was an incorrect guess and has been replaced.
+
+3. Every property has `currency` defaulting to 'AED' at the DB level
+   (properties.currency CHAR(3) DEFAULT 'AED') — confirming AED as the
+   default, though the column allows other 3-letter currency codes.
+
+NOTE: The SQL dump's `properties` table only contains 2 seed rows (vs.
+100 shown by the live /api/home endpoint) — this dump may be an older
+schema snapshot, not the live production data. The MATCHING VOCABULARY
+(property_types, property_features names/ids) is what matters for us and
+is treated as authoritative here since it defines the fixed lookup
+tables the AI's output must align with, regardless of how many actual
+property rows exist at any given time.
 """
 
 from __future__ import annotations
@@ -29,27 +42,36 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
-# Backend-confirmed (or inferred-pending-confirmation) vocab
+# Backend-confirmed vocab — sourced directly from vibelocate_db.sql
+# (CREATE TABLE property_types / property_features + their INSERT data)
 # ---------------------------------------------------------------------------
 
-# ASSUMPTION — inferred from live API response titles, not yet confirmed
-# by the backend team. Verify against their `property_types` table /
-# endpoint before relying on this in production.
+# CONFIRMED from the SQL dump's `property_types` table — only 3 rows exist.
 PROPERTY_TYPE_ID_MAP: dict[str, int] = {
     "apartment": 1,
     "villa": 2,
     "penthouse": 3,
     "townhouse": 4,
+    "house": 5,
+    "office": 6,
+    "warehouse": 7,
+    "land": 8,
+    "restaurant": 9,
+    "hotel": 10,
+    "building": 11,
+    "commercial": 12,
+    "clinic": 13,
+    "school": 14,
+    "showroom": 15,
+    "other": 16,
 }
 
-# Exact feature/amenity names observed in the live API's `features[].name`
-# field. The LLM is instructed to only pick from this list (see
-# intent_recognition.py SYSTEM_PROMPT) so its output can be matched
-# directly against the backend's data without fuzzy string matching.
+# CONFIRMED from the SQL dump's `property_features` table. Each feature
+# also has a category (amenity/facility/view/security/policy) in the DB,
+# but we only need the exact name strings here to constrain the LLM's
+# output — the backend owns the category mapping.
 KNOWN_FEATURE_NAMES: list[str] = [
-    "Swimming Pool", "Gym", "Parking", "24/7 Security", "Balcony",
-    "Central Air Conditioning", "Elevator", "Concierge", "Kids Play Area",
-    "Garden", "Sea View", "BBQ Area", "Jacuzzi", "Smart Home",
+    "Infinity Pool", "Full Sea View", "Smart Home", "Covered Parking",
 ]
 
 
@@ -66,8 +88,8 @@ class QueryRequest(BaseModel):
     """What the Flutter client sends to POST /api/search/ai-contextual."""
 
     raw_text: str = Field(..., min_length=1, examples=[
-        "quiet apartment near modern cafes with fast wifi under 2000 dollars",
-        "شقة هادية قريبة من كافيهات فيها واي فاي سريع تحت 7000 درهم",
+        "quiet apartment near modern cafes with an infinity pool under 150000 AED",
+        "شقة هادية فيها إطلالة بحر كاملة بـ 145000 درهم",
     ])
     language: Optional[Language] = None  # auto-detected if not provided
 
@@ -75,18 +97,18 @@ class QueryRequest(BaseModel):
 class ParsedCriteria(BaseModel):
     """
     Structured output of Query.parseWithLLM().
-    Shaped to match the live backend's property schema directly —
-    the Core Backend should be able to use type_id and feature names
-    with no extra translation layer.
+    Shaped to match the ACTUAL backend database schema (vibelocate_db.sql)
+    directly — property_type_id and required_amenities values must match
+    property_types.id / property_features.name exactly.
     """
 
     property_type: Optional[str] = None            # human-readable label, e.g. "Apartment" — for logging/debugging
-    property_type_id: Optional[int] = None          # matches backend's properties.type_id — SEE PROPERTY_TYPE_ID_MAP ASSUMPTION ABOVE
+    property_type_id: Optional[int] = None          # matches properties.type_id — see PROPERTY_TYPE_ID_MAP above
     max_budget: Optional[float] = None
-    budget_currency: Optional[str] = None           # "AED", "USD", etc. — whatever the user actually said; no assumed conversion
+    budget_currency: Optional[str] = None           # "AED", "USD", etc. — whatever the user actually said; DB defaults to AED
     min_bedrooms: Optional[int] = None
-    vibe_tags: list[str] = Field(default_factory=list)        # ["quiet", "near_cafes"] — free-form, NOT matched to backend fields
-    required_amenities: list[str] = Field(default_factory=list)  # MUST be drawn from KNOWN_FEATURE_NAMES
+    vibe_tags: list[str] = Field(default_factory=list)        # free-form, e.g. ["quiet", "near_cafes"] — NOT matched to backend fields
+    required_amenities: list[str] = Field(default_factory=list)  # MUST be drawn from KNOWN_FEATURE_NAMES (property_features.name)
     location_hint: Optional[str] = None             # free-text area/landmark mention
     confidence: float = Field(ge=0.0, le=1.0, default=0.0)
     needs_clarification: bool = False               # Scenario 2 (US-07): too short / unclear
@@ -97,6 +119,20 @@ class Query(BaseModel):
     raw_text: str
     parsed_criteria: Optional[ParsedCriteria] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PropertySearchResponse(BaseModel):
+    """
+    The actual end-to-end result: what the AI understood from the user's
+    text, PLUS the real matching properties fetched live from the
+    backend. `properties` are raw dicts (not strongly typed) since we
+    don't own the backend's Property schema — we just pass through
+    whatever fields it returns.
+    """
+
+    parsed_criteria: ParsedCriteria
+    matches_found: int
+    properties: list[dict]
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +155,7 @@ class SentimentResult(BaseModel):
 
 
 class VibeReport(BaseModel):
-    property_id: Optional[int] = None                # matches backend's properties.id (int, not UUID)
+    property_id: Optional[int] = None                # matches backend's properties.id (bigint, not UUID)
     safety_score: float = Field(ge=0.0, le=10.0)
     quietness_score: float = Field(ge=0.0, le=10.0)
     amenities_score: float = Field(ge=0.0, le=10.0)

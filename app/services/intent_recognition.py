@@ -1,10 +1,9 @@
 """
 Intent Recognition service — implements US-07 (Natural Language AI Search).
 
-UPDATED to match the live backend schema exactly (see schemas.py for the
-full rationale): numeric type_id instead of a free-text property type,
-amenities constrained to the backend's actual feature vocabulary, and
-explicit currency extraction instead of an assumed USD.
+Matches the backend's ACTUAL database schema (vibelocate_db.sql), not a
+guessed one — see schemas.py for the full rationale behind
+PROPERTY_TYPE_ID_MAP and KNOWN_FEATURE_NAMES.
 """
 
 from app.deepseek_client import DeepSeekUnavailableError, call_json
@@ -24,7 +23,7 @@ Return ONLY a JSON object with exactly these fields:
   "budget_currency": string or null,       // e.g. "AED", "USD" — whatever currency the user actually stated. If they said a plain number with no currency, use null (do NOT assume USD or AED).
   "min_bedrooms": integer or null,
   "vibe_tags": array of short lowercase English tags (e.g. ["quiet", "modern", "near_cafes"]),
-  "required_amenities": array of amenities, EACH must be an EXACT match from this fixed list: [{_FEATURE_LIST_STR}]. Do not invent amenities outside this list — if the user mentions something not on the list (e.g. "fast wifi"), put it in vibe_tags instead, not required_amenities.
+  "required_amenities": array of amenities, EACH must be an EXACT match from this fixed list: [{_FEATURE_LIST_STR}]. Do not invent amenities outside this list — if the user mentions something not on the list (e.g. "gym" or "wifi"), put a descriptive tag in vibe_tags instead, not required_amenities.
   "location_hint": string or null,         // any neighborhood/landmark mentioned, verbatim
   "confidence": number 0.0-1.0,            // how confident you are in this extraction
   "needs_clarification": boolean           // true if the text is too short/vague to search on
@@ -35,7 +34,7 @@ Rules:
   and confidence below 0.3.
 - Never invent a budget, currency, or bedroom count that isn't stated or clearly implied.
 - vibe_tags and required_amenities must always be arrays, even if empty.
-- property_type must match the fixed list exactly (capitalized) or be null — never invent a new type.
+- property_type must match the fixed list exactly (capitalized) or be null — never invent a new type (e.g. never output "Townhouse" or "Studio").
 """
 
 
